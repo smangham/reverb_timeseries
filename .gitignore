@@ -2,6 +2,7 @@
 *.db
 *.sqlite
 *.gz
+.DS_Store
 venv/
 .idea/
 __pycache__/
