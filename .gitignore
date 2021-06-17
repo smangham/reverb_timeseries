@@ -1,0 +1,7 @@
+*.pickle
+*.db
+*.sqlite
+*.gz
+venv/
+.idea/
+__pycache__/
