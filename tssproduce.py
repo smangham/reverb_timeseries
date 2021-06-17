@@ -84,12 +84,12 @@ output_spectra_file = "out_spectra"
 output_animation_file = "out_anim"
 
 is_reversed = False
-visualise_outputs = True
+visualise_outputs = False
 visualise_animation = False
 visualise_clean = False
-visualise_rescaled_tfs = True
+visualise_rescaled_tfs = False
 visualise_rescaled_tfs_max = 30
-time_series_outputs = False
+time_series_outputs = True
 
 # --------- RESCALING ----------
 delay_max = 90 * u.d
@@ -325,9 +325,9 @@ else:
     spectra_times_qso.write(output_times_line_file+'_qso.dat', format='ascii', overwrite=True)
 
 if time_series_outputs:
-    tss_output.CARAMEL(lightcurve_qso, spectra_qso_line, spectra_times, suffix_qso)
+    tss_output.CARAMEL(lightcurve_qso, spectra_qso_line, spectra_times, suffix_qso, rescale=False)
     tss_output.MEMECHO(lightcurve_qso, spectra_qso_full, spectra_times, suffix_qso)
-    tss_output.CARAMEL(lightcurve_sey, spectra_sey_line, spectra_times, suffix_sey)
+    tss_output.CARAMEL(lightcurve_sey, spectra_sey_line, spectra_times, suffix_sey, rescale=False)
     tss_output.MEMECHO(lightcurve_sey, spectra_sey_full, spectra_times, suffix_sey)
 
 # ==============================================================================

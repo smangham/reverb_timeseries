@@ -14,12 +14,14 @@ from matplotlib.figure import figaspect
 
 from astropy import units as u
 
-import tfpy
+from typing import Optional
 
+import tfpy
+import os
 import shutil
 
 
-def CARAMEL(lightcurve, spectra, spectra_times, suffix):
+def CARAMEL(lightcurve, spectra, spectra_times, suffix, rescale: Optional[bool] = True):
     """
     Given a lightcurve, series of spectra and time outputs to CARAMEL format
 
@@ -43,14 +45,28 @@ def CARAMEL(lightcurve, spectra, spectra_times, suffix):
     # Value (rescaled from 1-100)
     # Error (rescaled as above)
 
+
+    try:
+        os.mkdir('caramel/'.format(suffix))
+    except:
+        print("Directory 'caramel/' already exists")
+    try:
+        os.mkdir('caramel/{}'.format(suffix))
+    except:
+        print("Directory 'caramel/{}/' already exists")
+
     time = np.array(lightcurve['time'].quantity.to(u.s))
     # Rescale value and error from 1-100
-    value = np.array((lightcurve['value'] - np.amin(lightcurve['value']))
-                     / (np.amax(lightcurve['value']) - np.amin(lightcurve['value'])))
-    value = (value * 9) + 1
-    error = np.array(lightcurve['error']
-                     / (np.amax(lightcurve['value']) - np.amin(lightcurve['value'])))
-    error = (error * 9)
+    if rescale:
+        value = np.array((lightcurve['value'] - np.amin(lightcurve['value']))
+                         / (np.amax(lightcurve['value']) - np.amin(lightcurve['value'])))
+        value = (value * 9) + 1
+        error = np.array(lightcurve['error']
+                         / (np.amax(lightcurve['value']) - np.amin(lightcurve['value'])))
+        error = (error * 9)
+    else:
+        value = np.array(lightcurve['value'])
+        error = np.array(lightcurve['error'])
 
     np.savetxt('caramel/{}/caramel_lightcurve_{}.txt'.format(suffix, suffix), np.column_stack((time, value, error)))
 
@@ -69,21 +85,37 @@ def CARAMEL(lightcurve, spectra, spectra_times, suffix):
     # Third row is rescaled flux from 1-100 for spectrum 1
     # Fourth row is rescaled flux error for spectrum 1
     to_save = [spectra['wave']]
-    spec_min = 999e99
-    spec_max = -999e99
-    for column in spectra.colnames[1:]:
-        if np.amax(spectra[column]) > spec_max:
-            spec_max = np.amax(spectra[column])
-        if np.amin(spectra[column]) < spec_min:
-            spec_min = np.amin(spectra[column])
+
+    if rescale:
+        spec_min = 999e99
+        spec_max = -999e99
+
+        for column in spectra.colnames[1:]:
+            if np.amax(spectra[column]) > spec_max:
+                spec_max = np.amax(spectra[column])
+            if np.amin(spectra[column]) < spec_min:
+                spec_min = np.amin(spectra[column])
+    else:
+        with open('caramel/{}/caramel_units.txt'.format(suffix), 'w') as units_file:
+            units_file.write(
+                "Spectra times: {}\n".format(spectra_times['time'].unit) +
+                "Spectra wavelengths: {}\n".format(spectra['wave'].unit) +
+                "Spectra values: {}\n".format(spectra['value'].unit) +
+                "Lightcurve times: {}\n".format(lightcurve['time'].unit) +
+                "Lightcurve values: {}\n".format(lightcurve['value'].unit)
+            )
 
     for column in spectra.colnames[5:]:
-        value = (np.array(spectra[column]) - spec_min) / (spec_max - spec_min)
-        value = (value * 9) + 1
-        error = np.array(spectra['error']) / (spec_max - spec_min)
-        error = (error * 9)
-        to_save.append(value)
-        to_save.append(error)
+        if rescale:
+            value = (np.array(spectra[column]) - spec_min) / (spec_max - spec_min)
+            value = (value * 9) + 1
+            error = np.array(spectra['error']) / (spec_max - spec_min)
+            error = (error * 9)
+            to_save.append(value)
+            to_save.append(error)
+        else:
+            to_save.append(spectra[column])
+            to_save.append(spectra['error'])
 
     np.savetxt('caramel/{}/caramel_spectra_{}.txt'.format(suffix, suffix), to_save, header='{}'.format(len(spectra)))
     shutil.make_archive('caramel_{}'.format(suffix), 'zip', 'caramel/{}/'.format(suffix))
