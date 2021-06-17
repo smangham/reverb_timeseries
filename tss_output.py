@@ -109,12 +109,13 @@ def CARAMEL(lightcurve, spectra, spectra_times, suffix, rescale: Optional[bool] 
         if rescale:
             value = (np.array(spectra[column]) - spec_min) / (spec_max - spec_min)
             value = (value * 9) + 1
-            error = np.array(spectra['error']) / (spec_max - spec_min)
+            error = np.array(spectra['error']) / (spec_max - spec_min)  # Why do I do this every iteration?
             error = (error * 9)
             to_save.append(value)
             to_save.append(error)
         else:
-            to_save.append(spectra[column])
+            value = spectra[column].clip(0)
+            to_save.append(value)
             to_save.append(spectra['error'])
 
     np.savetxt('caramel/{}/caramel_spectra_{}.txt'.format(suffix, suffix), to_save, header='{}'.format(len(spectra)))
