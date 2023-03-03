@@ -1,0 +1,5 @@
+Spectra times: MJD
+Spectra wavelengths: Angstrom
+Spectra values: 3.3431e-42 erg / (cm2 s)
+Lightcurve times: MJD
+Lightcurve values: erg / (cm2 s)
